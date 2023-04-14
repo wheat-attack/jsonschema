@@ -42,7 +42,7 @@ validate(j, k)
 
 ```
 from jsonschema import function_schema_validator
-@function_schema_validator
+@function_schema_validator(your_schema)
 def your_function():
     pass
 ```
