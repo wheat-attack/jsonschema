@@ -18,7 +18,7 @@ k = {
             "type": "array",
             "items": {
                 "type": "integer",
-                "sangfor_callback": $yourFunction
+                "function": $yourFunction
             }
         }
     },
