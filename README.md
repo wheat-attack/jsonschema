@@ -38,7 +38,7 @@ validate(j, k)
 
 2、json schema支持函数参数生成json进行校验
 
-函数外侧添加装饰器即可
+函数外侧添加装饰器即可，定义方式与原有保持一致
 
 ```
 from jsonschema import function_schema_validator
