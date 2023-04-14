@@ -38,6 +38,11 @@ def propertyNames(validator, propertyNames, instance, schema):
             yield error
 
 
+def function(validator, properties, instance, schema):
+    func = schema.get('function')
+    func(instance)
+
+
 def additionalProperties(validator, aP, instance, schema):
     if not validator.is_type(instance, "object"):
         return

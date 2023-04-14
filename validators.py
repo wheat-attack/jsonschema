@@ -4,6 +4,7 @@ Creation and extension of validators, with implementations for existing drafts.
 from __future__ import division
 
 from warnings import warn
+import inspect
 import contextlib
 import json
 import numbers
@@ -33,7 +34,7 @@ from jsonschema.compat import (
 # Sigh. https://gitlab.com/pycqa/flake8/issues/280
 #       https://github.com/pyga/ebb-lint/issues/7
 # Imported for backwards compatibility.
-from jsonschema.exceptions import ErrorTree
+from jsonschema.exceptions import ErrorTree, ValidationError
 ErrorTree
 
 
@@ -465,7 +466,7 @@ Draft3Validator = create(
         u"patternProperties": _validators.patternProperties,
         u"properties": _legacy_validators.properties_draft3,
         u"type": _legacy_validators.type_draft3,
-        u"uniqueItems": _validators.uniqueItems,
+        u"uniqueItems": _validators.uniqueItems
     },
     type_checker=_types.draft3_type_checker,
     version="draft3",
@@ -581,6 +582,7 @@ Draft7Validator = create(
         u"required": _validators.required,
         u"type": _validators.type,
         u"uniqueItems": _validators.uniqueItems,
+        u"function": _validators.function
     },
     type_checker=_types.draft7_type_checker,
     version="draft7",
@@ -968,3 +970,43 @@ def validator_for(schema, default=_LATEST_VERSION):
             stacklevel=2,
         )
     return meta_schemas.get(schema[u"$schema"], _LATEST_VERSION)
+
+
+def _func_arg2json(func, *args, **kwargs):
+    """
+    获取函数参数
+    :param func:
+    :return:
+    """
+    full_arg = inspect.getfullargspec(func)
+    func_args = full_arg.args
+    default_args = full_arg.defaults
+
+    func_arg_cnt = len(func_args)
+    arg_cnt = len(args)
+    instance = {}
+
+    for i in range(arg_cnt):
+        instance[func_args[i]] = args[i]
+
+    for i in range(arg_cnt, func_arg_cnt):
+        arg_name = func_args[i]
+        instance[arg_name] = kwargs[arg_name] if kwargs.get(arg_name) else default_args[i - arg_cnt]
+
+    return instance
+
+
+def function_schema_validator(schema):
+    """
+    function_schema_validator 函数校验装饰器
+    :param schema:
+    :return:
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            arg_json = _func_arg2json(func, *args, **kwargs)
+            validate(arg_json, schema)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
